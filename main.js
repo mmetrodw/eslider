@@ -12,6 +12,7 @@ class ESlider {
 		this.totalSlides = 0;
 		this.slideWidth = 0;
 		this.isSlidingAllowed = true;
+		this.isDragging = false;
 		this.firstSlideClone = null;
 		this.lastSlideClone = null;
 		this.initialPositionX = 0;
@@ -34,6 +35,7 @@ class ESlider {
  
 		this.elements.sliderWrapper.appendChild(this.firstSlideClone);
 		this.elements.sliderWrapper.insertBefore(this.lastSlideClone, this.elements.slides[0]);
+
 		// Оновлюємо колекцію слайдів
     this.elements.slides = this.elements.sliderWrapper.querySelectorAll('.es-slide');
 
@@ -45,7 +47,10 @@ class ESlider {
 		});
  
     // Mouse events
-    //this.elements.wrapper.onmousedown = this.dragStart.bind(this);
+    this.elements.sliderWrapper.addEventListener('mousedown', this.dragStart.bind(this));
+    this.elements.sliderWrapper.addEventListener('mousemove', this.dragAction.bind(this));
+    this.elements.sliderWrapper.addEventListener('mouseup', this.dragEnd.bind(this));
+    this.elements.sliderWrapper.addEventListener('mouseleave', this.dragEnd.bind(this));
 
     // Touch events
     //this.elements.wrapper.addEventListener('touchstart', this.dragStart.bind(this));
@@ -53,24 +58,21 @@ class ESlider {
     //this.elements.wrapper.addEventListener('touchend', this.dragEnd.bind(this));
 
 		this.elements.sliderWrapper.style.left = -(this.slideWidth * this.currentSlideIndex) + 'px';
+		this.elements.sliderWrapper.style.width = this.slideWidth * (this.totalSlides + 2) + 'px';
 		this.highlightCurrentNavigationItem();
 	}
  
 	moveToNextSlide() {
-	  console.log('next');
 		if (!this.isSlidingAllowed) return;
 		this.isSlidingAllowed = false;
 		this.currentSlideIndex++;
-		console.log('here')
 		this.updateSlidePosition();
 	}
  
 	moveToPrevSlide() {
-	  console.log('prev')
 		if (!this.isSlidingAllowed) return;
 		this.isSlidingAllowed = false;
 		this.currentSlideIndex--;
-		console.log('here prev')
 		this.updateSlidePosition();
 	}
  
@@ -84,15 +86,14 @@ class ESlider {
 	dragStart(event) {
     if (!this.isSlidingAllowed) return;
     event.preventDefault();
+		this.isDragging = true;
 
     this.initialPositionX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
-
-    document.addEventListener('mouseup', this.dragEnd.bind(this));
-    document.addEventListener('mousemove', this.dragAction.bind(this));
 	}
 	
 	dragAction(event) {
 	  if (!this.isSlidingAllowed) return;
+	  if (!this.isDragging) return;
     event.preventDefault();
 
     this.currentPositionX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;
@@ -105,6 +106,8 @@ class ESlider {
 
   dragEnd(event) {
     event.preventDefault();
+	  if (!this.isDragging) return;
+		this.isDragging = false;
     if (this.currentPositionX - this.initialPositionX < -this.threshold) {
       this.moveToNextSlide();
     } else if (this.currentPositionX - this.initialPositionX > this.threshold) {
@@ -121,9 +124,6 @@ class ESlider {
         null
       );
     }
-    
-    document.removeEventListener('mouseup', this.dragEnd.bind(this));
-    document.removeEventListener('mousemove', this.dragAction.bind(this));
   }
 
 	updateSlidePosition() {
