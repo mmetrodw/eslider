@@ -45,12 +45,12 @@ class ESlider {
 		});
  
     // Mouse events
-    this.elements.wrapper.onmousedown = this.dragStart.bind(this);
+    //this.elements.wrapper.onmousedown = this.dragStart.bind(this);
 
     // Touch events
-    this.elements.wrapper.addEventListener('touchstart', this.dragStart.bind(this));
-    this.elements.wrapper.addEventListener('touchmove', this.dragAction.bind(this));
-    this.elements.wrapper.addEventListener('touchend', this.dragEnd.bind(this));
+    //this.elements.wrapper.addEventListener('touchstart', this.dragStart.bind(this));
+    //this.elements.wrapper.addEventListener('touchmove', this.dragAction.bind(this));
+    //this.elements.wrapper.addEventListener('touchend', this.dragEnd.bind(this));
 
 		this.elements.sliderWrapper.style.left = -(this.slideWidth * this.currentSlideIndex) + 'px';
 		this.highlightCurrentNavigationItem();
