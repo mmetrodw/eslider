@@ -10,11 +10,16 @@ body {
   height: 400px;
   z-index: 1;
   overflow: hidden;
-
 }
 
-.es-wrapper:active {
-  cursor: grabbing;
+.es-wrapper.sliding {
+  pointer-events: none;
+}
+
+.es-wrapper *,
+.es-wrapper *::before,
+.es-wrapper *::after {
+  box-sizing: border-box;
 }
 
 .es-slider {
@@ -24,8 +29,8 @@ body {
   z-index: 2;
 }
 
-.es-slider.sliding {
-  transition: all 1s cubic-bezier(.35,0,0,1);
+.es-slider:active {
+  cursor: grabbing;
 }
 
 .es-slide {
@@ -64,14 +69,35 @@ body {
   height: 30px;
   top: 50%;
   transform: translateY(-50%);
-  background: #fff;
   z-index: 4;
   cursor: pointer;
 }
 
-.es-prev-slide:active,
-.es-next-slide:active {
-  transform: translateY(-50%) scale(.75);
+.es-prev-slide:before,
+.es-next-slide:before {
+  position: absolute;
+  content: '';
+  width: 22px;
+  height: 22px;
+  top: 4px;
+  left: 4px;
+  border: 2px solid #FFF;
+  transform: rotate(-45deg);
+}
+
+.es-prev-slide:before {
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.es-next-slide:before {
+  border-top-color: transparent;
+  border-left-color: transparent;
+}
+
+.es-prev-slide:active::before,
+.es-next-slide:active::before {
+  transform: rotate(-45deg) scale(.75);
 }
 
 .es-prev-slide {
