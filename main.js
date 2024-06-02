@@ -245,9 +245,9 @@ class ESlider {
     this.elements.wrapper.addEventListener('mouseleave', this.dragEnd.bind(this));
 
     // Touch events
-    //this.elements.wrapper.addEventListener('touchstart', this.dragStart.bind(this));
-    //this.elements.wrapper.addEventListener('touchmove', this.dragAction.bind(this));
-    //this.elements.wrapper.addEventListener('touchend', this.dragEnd.bind(this));
+    this.elements.wrapper.addEventListener('touchstart', this.dragStart.bind(this));
+    this.elements.wrapper.addEventListener('touchmove', this.dragAction.bind(this));
+    this.elements.wrapper.addEventListener('touchend', this.dragEnd.bind(this));
 
 		this.elements.sliderWrapper.style.left = -(this.slideWidth * this.currentSlideIndex) + 'px';
 		this.elements.sliderWrapper.style.width = this.slideWidth * (this.totalSlides + 2) + 'px';
