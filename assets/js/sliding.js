@@ -1,60 +1,107 @@
 class ESlider {
 	constructor(options) {
-		this.initialSettings = {
+		const initialSettings = {
+			target: null,
+			data: null,
+			animation: 'sliding',
+			navigation: true,
+			pagination: true,
 			slideDuration: 600,
 			slideDirection: 'horizontal', // horizontal, vertical
 			slideEasing: 'easeOutCirc',
 			autoSlide: true,
 			autoSlideInterval: 3000
 		};
-		this.settings = this.deepMerge(this.initialSettings, options);
+		this.settings = this.deepMerge(initialSettings, options);
 
-		this.currentSlideIndex = 1;
 		this.elements = {
-			wrapper: document.getElementById(this.settings.target),
-			sliderWrapper: null,
-			slides: null,
-			nextSlideButton: null,
-			prevSlideButton: null,
-			navigationItems: null
+			wrapper: document.getElementById(this.settings.target)
 		};
-		this.totalSlides = 0;
-		this.slideWidth = 0;
-		this.isSlidingAllowed = true;
-		this.isDragging = false;
-		this.firstSlideClone = null;
-		this.lastSlideClone = null;
-		this.initialPosition = 0;
-		this.currentPosition = 0;
-		this.threshold = 100;
+		this.currentSlideIndex = 1;
+		this.checkErrors();
+		this.buidSlider();
 		this.init();
 	}
 
-	init() {
-		this.elements.wrapper.style.setProperty('--slideDuration', this.settings.slideDuration + 'ms');
-		this.elements.wrapper.style.setProperty('--slideEasing', 'var(--' + this.settings.slideEasing + ')');
+	checkErrors() {
+		if(!this.elements.wrapper) {
+			throw new Error('ESlider: Target element not found');
+		}
+		if(!this.settings.data) {
+			throw new Error('ESlider: Data not provided');
+		}
+	}
+ 
+	buidSlider() {
 		this.elements.wrapper.classList.add(
+			'es-wrapper',
 			this.settings.slideDirection === 'horizontal' ? 'es-horizontal' : 'es-vertical'
 		);
+		// Animation
+		this.elements.wrapper.classList.add('es-' + this.settings.animation + '-animation');
 
-		this.elements.sliderWrapper = this.elements.wrapper.querySelector('.es-slider');
+		this.elements.wrapper.style.setProperty('--slideDuration', this.settings.slideDuration + 'ms');
+		this.elements.wrapper.style.setProperty('--slideEasing', 'var(--' + this.settings.slideEasing + ')');
+
+		this.elements.sliderWrapper = document.createElement('DIV');
+		this.elements.sliderWrapper.classList.add('es-slider');
+
+		this.elements.sliderWrapper.appendChild(this.createSlide(this.settings.data[this.settings.data.length - 1]));
+		this.settings.data.forEach((item) => this.elements.sliderWrapper.appendChild(this.createSlide(item)));
+		this.elements.sliderWrapper.appendChild(this.createSlide(this.settings.data[0]));
+
+		this.elements.wrapper.appendChild(this.elements.sliderWrapper);
 		this.elements.slides = this.elements.sliderWrapper.querySelectorAll('.es-slide');
-		this.elements.nextSlideButton = this.elements.wrapper.querySelector('.es-next-slide');
-		this.elements.prevSlideButton = this.elements.wrapper.querySelector('.es-prev-slide');
-		this.elements.navigationItems = this.elements.wrapper.querySelectorAll('.es-navigation-item');
 
-		this.totalSlides = this.elements.slides.length;
+		// Pagination
+		if(this.settings.pagination) {
+			this.elements.paginationWrapper = document.createElement('DIV');
+			this.elements.paginationWrapper.classList.add('es-pagination-wrapper');
+			this.elements.wrapper.appendChild(this.elements.paginationWrapper);
+			this.settings.data.forEach((item, index) => {
+				let dot = document.createElement('button');
+				dot.classList.add('es-pagination-item');
+				this.elements.paginationWrapper.append(dot);
+			});
+			this.elements.paginationItem = this.elements.paginationWrapper.querySelectorAll('.es-pagination-item');
+		}
+
+		// Navigation Buttons
+		if(this.settings.navigation) {
+			this.elements.navigationWrapper = document.createElement('DIV');
+			this.elements.navigationWrapper.classList.add('es-navigation-wrapper');
+			this.elements.wrapper.appendChild(this.elements.navigationWrapper);
+
+			this.elements.prevSlideButton = document.createElement("button");
+			this.elements.prevSlideButton.classList.add('es-prev-slide');
+			this.elements.navigationWrapper.appendChild(this.elements.prevSlideButton);
+
+			this.elements.nextSlideButton = document.createElement("button");
+			this.elements.nextSlideButton.classList.add('es-next-slide');
+			this.elements.navigationWrapper.appendChild(this.elements.nextSlideButton);
+		}
+	}
+
+	createSlide(item) {
+		let slide = document.createElement('DIV');
+		slide.classList.add('es-slide');
+		if(item.image) {
+			let img = document.createElement('IMG');
+			img.src = item.image;
+			slide.appendChild(img);
+		}
+		return slide;
+	}
+
+	init() {
+		this.totalSlides = this.settings.data.length;
 		this.slideWidth = this.elements.wrapper.offsetWidth;
 		this.slideHeight = this.elements.wrapper.offsetHeight;
+		this.isSlidingAllowed = true;
+		this.isDragging = false;
+		this.initialPosition = 0;
+		this.currentPosition = 0;
 		this.threshold = this.settings.slideDirection === 'horizontal' ? this.slideWidth / 4 : this.slideHeight / 4;
-		this.firstSlideClone = this.elements.slides[0].cloneNode(true);
-		this.lastSlideClone = this.elements.slides[this.totalSlides - 1].cloneNode(true);
-
-		this.elements.sliderWrapper.appendChild(this.firstSlideClone);
-		this.elements.sliderWrapper.insertBefore(this.lastSlideClone, this.elements.slides[0]);
-
-		// Update Sildes Collection
-		this.elements.slides = this.elements.sliderWrapper.querySelectorAll('.es-slide');
 
 		// Set Slider Position
 		const dimension = this.settings.slideDirection === 'horizontal' ? 'width' : 'height';
@@ -91,7 +138,7 @@ class ESlider {
 		// Slider Navigation
 		this.elements.prevSlideButton.addEventListener('click', this.moveToPrevSlide.bind(this));
 		this.elements.nextSlideButton.addEventListener('click', this.moveToNextSlide.bind(this));
-		this.elements.navigationItems.forEach((item, index) => {
+		this.elements.paginationItem.forEach((item, index) => {
 			item.addEventListener('click', this.moveToSlideByNavigation.bind(this, index + 1));
 		});
 
@@ -180,6 +227,7 @@ class ESlider {
 	updateSlidePosition() {
 		this.highlightCurrentNavigationItem();
 		this.elements.wrapper.classList.add('sliding');
+		// Set Slider Position
 		if(this.settings.slideDirection === 'horizontal'){
 			this.elements.sliderWrapper.style.left = -(this.slideWidth * this.currentSlideIndex) + 'px';
 		} else {
@@ -189,8 +237,8 @@ class ESlider {
 
 	highlightCurrentNavigationItem() {
 		const index = (this.currentSlideIndex - 1 + this.totalSlides) % this.totalSlides;
-		this.elements.navigationItems.forEach(item => item.classList.remove('current'));
-		this.elements.navigationItems[index].classList.add('current');
+		this.elements.paginationItem.forEach(item => item.classList.remove('current'));
+		this.elements.paginationItem[index].classList.add('current');
 	}
 
 	adjustCurrentSlideIndex() {
@@ -231,5 +279,27 @@ class ESlider {
  }
 
  const slider = new ESlider({
-	target: 'test'
+	target: 'test2',
+	autoSlide: false,
+	slideDirection: 'horizontal',
+	//slideDirection: 'horizontal',
+	animation: 'sliding',
+	//animation: 'sliding',
+	data: [
+		{
+			image: 'assets/img/1.jpg'
+		}, {
+			image: 'assets/img/2.jpg'
+		}, {
+			image: 'assets/img/3.jpg'
+		}, {
+			image: 'assets/img/4.jpg'
+		}, {
+			image: 'assets/img/5.jpg'
+		}, {
+			image: 'assets/img/6.jpg'
+		}, {
+			image: 'assets/img/7.jpg'
+		}
+	]
  });
